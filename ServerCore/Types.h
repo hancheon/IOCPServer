@@ -2,8 +2,6 @@
 #include <atomic>
 #include <mutex>
 
-#define OUT
-
 //---------------------------------------------------------
 
 using BYTE			= unsigned char;
