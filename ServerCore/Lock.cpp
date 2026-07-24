@@ -1,6 +1,4 @@
 #include "pch.h"
-#include "Lock.h"
-#include "CoreTLS.h"
 
 //-------------//
 // RW SpinLock //
@@ -8,7 +6,7 @@
 
 void Lock::WriteLock()
 {
-	// recursive lock
+	// Recursive Lock
 	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (lockThreadId == LThreadId)
 	{
@@ -16,7 +14,7 @@ void Lock::WriteLock()
 		return;
 	}
 
-	// check lock
+	// Check Lock
 	const uint32 beginTick = ::GetTickCount64();
 	const uint32 desired = ((LThreadId << 16) & WRITE_THREAD_MASK);
 	while (true)
@@ -33,7 +31,7 @@ void Lock::WriteLock()
 
 		if (::GetTickCount64() - beginTick >= ACQUIRE_TIMEOUT_TICK)
 		{
-			// 俊矾贸府
+			CRASH("LOCK_TIMEOUT");
 		}
 
 		this_thread::yield();
@@ -42,10 +40,10 @@ void Lock::WriteLock()
 
 void Lock::WriteUnlock()
 {
-	// for error checking
+	// For Error Checking
 	if ((_lockFlag.load() & READ_COUNT_MASK) != 0)
 	{
-		// 俊矾贸府
+		CRASH("INVALID_UNLOCK_ORDER");
 	}
 
 	const int32 lockCount = --_writeCount;
@@ -57,7 +55,7 @@ void Lock::WriteUnlock()
 
 void Lock::ReadLock()
 {
-	// recursive lock
+	// Recursive Lock
 	const uint32 lockThreadId = (_lockFlag.load() & WRITE_THREAD_MASK) >> 16;
 	if (lockThreadId == LThreadId)
 	{
@@ -65,7 +63,7 @@ void Lock::ReadLock()
 		return;
 	}
 
-	// check lock
+	// Check Lock
 	const uint32 beginTick = ::GetTickCount64();
 	while (true)
 	{
@@ -79,7 +77,7 @@ void Lock::ReadLock()
 
 			if (::GetTickCount64() - beginTick >= ACQUIRE_TIMEOUT_TICK)
 			{
-				// 俊矾贸府
+				CRASH("LOCK_TIMEOUT");
 			}
 
 			this_thread::yield();
@@ -91,6 +89,6 @@ void Lock::ReadUnlock()
 {
 	if ((_lockFlag.fetch_sub(1) & READ_COUNT_MASK) == 0)
 	{
-		// 俊矾贸府
+		CRASH("MULTIPLE_UNLOCK");
 	}
 }
